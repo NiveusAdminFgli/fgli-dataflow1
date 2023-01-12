@@ -35,79 +35,79 @@ public class Main {
    
 
 
-        PipelineOptionsFactory.register(MyOptions.class);
+        //PipelineOptionsFactory.register(MyOptions.class);
         MyOptions options = PipelineOptionsFactory.fromArgs(args)
                                     .withValidation()
                                     .as(MyOptions.class);
         Pipeline p2 = Pipeline.create(options);
-      
+        p2.run();
         
 
 
-        String query2= "select * from [dbo].[cssEnqComments]";
-        System.out.println(query2);
+//         String query2= "select * from [dbo].[cssEnqComments]";
+//         System.out.println(query2);
 
 
-        PCollection<TableRow> rows = p2.apply(JdbcIO.<TableRow>read()
-                .withDataSourceConfiguration(JdbcIO.DataSourceConfiguration.create(
-                                "com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver://10.8.41.127:21553;database=CLSrepl;")
-                        .withUsername(options.getUsername())
-                        .withPassword(options.getPassword()))
-                .withQuery(query2)
-                .withCoder(TableRowJsonCoder.of())
-                .withRowMapper(new JdbcIO.RowMapper<TableRow>() {
-                    @Override
-                    public TableRow mapRow(ResultSet resultSet) throws Exception {
-                        schema = getSchemaFromResultSet(resultSet);
+//         PCollection<TableRow> rows = p2.apply(JdbcIO.<TableRow>read()
+//                 .withDataSourceConfiguration(JdbcIO.DataSourceConfiguration.create(
+//                                 "com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver://10.8.41.127:21553;database=CLSrepl;")
+//                         .withUsername(options.getUsername())
+//                         .withPassword(options.getPassword()))
+//                 .withQuery(query2)
+//                 .withCoder(TableRowJsonCoder.of())
+//                 .withRowMapper(new JdbcIO.RowMapper<TableRow>() {
+//                     @Override
+//                     public TableRow mapRow(ResultSet resultSet) throws Exception {
+//                         schema = getSchemaFromResultSet(resultSet);
 
-                        TableRow tableRow = new TableRow();
+//                         TableRow tableRow = new TableRow();
 
-                        List<TableFieldSchema> columnNames = schema.getFields();
+//                         List<TableFieldSchema> columnNames = schema.getFields();
 
-                        for(int i =1; i<= resultSet.getMetaData().getColumnCount(); i++) {
-                            tableRow.put(columnNames.get(i-1).get("name").toString(), String.valueOf(resultSet.getObject(i)));
-                        }
+//                         for(int i =1; i<= resultSet.getMetaData().getColumnCount(); i++) {
+//                             tableRow.put(columnNames.get(i-1).get("name").toString(), String.valueOf(resultSet.getObject(i)));
+//                         }
 
-                        return tableRow;
-                    }
-                })
-        );
+//                         return tableRow;
+//                     }
+//                 })
+//         );
 
-        // Write to BigQuery
-        rows.apply(BigQueryIO.writeTableRows()
-                .to("fg-dt-lumiq-dev:fg_dt_lumiq_dev_sql.CLSrepl_cssEnqComments")
-                .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
-                .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
-                .withMethod(BigQueryIO.Write.Method.STORAGE_WRITE_API)
-        );
+//         // Write to BigQuery
+//         rows.apply(BigQueryIO.writeTableRows()
+//                 .to("fg-dt-lumiq-dev:fg_dt_lumiq_dev_sql.CLSrepl_cssEnqComments")
+//                 .withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
+//                 .withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_NEVER)
+//                 .withMethod(BigQueryIO.Write.Method.STORAGE_WRITE_API)
+//         );
 
-//         p2.run().waitUntilFinish();
-        PipelineResult result = p2.run();
-        try {
-            result.getState();
-            result.waitUntilFinish();
-        } catch (UnsupportedOperationException e) {
-           // do nothing
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+// //         p2.run().waitUntilFinish();
+//         PipelineResult result = p2.run();
+//         try {
+//             result.getState();
+//             result.waitUntilFinish();
+//         } catch (UnsupportedOperationException e) {
+//            // do nothing
+//         } catch (Exception e) {
+//             e.printStackTrace();
+//         }
 
-    }
+//     }
 
 
-    private static TableSchema getSchemaFromResultSet(ResultSet resultSet) {
-        FieldSchemaListBuilder fieldSchemaListBuilder = new FieldSchemaListBuilder();
-        try {
-            ResultSetMetaData rsmd = resultSet.getMetaData();
+//     private static TableSchema getSchemaFromResultSet(ResultSet resultSet) {
+//         FieldSchemaListBuilder fieldSchemaListBuilder = new FieldSchemaListBuilder();
+//         try {
+//             ResultSetMetaData rsmd = resultSet.getMetaData();
 
-            for(int i=1; i <= rsmd.getColumnCount(); i++) {
-                fieldSchemaListBuilder.stringField(resultSet.getMetaData().getColumnName(i));
-            }
-        }
-        catch (SQLException ex) {
-            LOG.error("Error getting metadata: " + ex.getMessage());
-        }
+//             for(int i=1; i <= rsmd.getColumnCount(); i++) {
+//                 fieldSchemaListBuilder.stringField(resultSet.getMetaData().getColumnName(i));
+//             }
+//         }
+//         catch (SQLException ex) {
+//             LOG.error("Error getting metadata: " + ex.getMessage());
+//         }
 
-        return fieldSchemaListBuilder.schema();
-    }
+//         return fieldSchemaListBuilder.schema();
+//     }
 }
